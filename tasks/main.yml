@@ -1,0 +1,45 @@
+---
+
+- name: Install cpanm on Ubuntu
+  package:
+    name: "cpanminus"
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- block:
+  - name: Install Perl-CPAN on CentOS
+    package:
+      name: "perl-CPAN.x86_64"
+      state: present
+
+  - name: Install cpanm CentOS
+    shell: >
+      curl -L http://cpanmin.us | perl - App::cpanminus
+  when: ansible_distribution == "CentOS"
+
+- name: Install perl dependencies
+  cpanm:
+    name: "{{ item }}"
+    use_sudo: yes
+    notest: yes
+  with_items:
+    - "Config::General"
+    - "Tie::IxHash"
+    - "Parallel::ForkManager"
+
+- name: Download SVDetect
+  get_url:
+    url: "https://sourceforge.net/projects/svdetect/files/SVDetect/0.70/SVDetect_r0.7m.tar.gz"
+    dest: "/tmp/svdetect.tar.gz"
+
+- name: Unarchive SVDetect
+  unarchive:
+    src: "/tmp/svdetect.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Copy executable to path
+  copy:
+    src: "/tmp/SVDetect_r0.7m/bin/SVDetect"
+    dest: "/usr/local/bin/SVDetect"
+    remote_src: yes
